@@ -1,6 +1,6 @@
 import React from 'react';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import SignInView from './SignInView';
+import { SignInView } from './SignInView';
 
 class SignOutView extends SignInView {
   static navigationOptions = ({ navigation }) => ({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import {
   ListView,
   StyleSheet,
@@ -6,9 +6,10 @@ import {
   TouchableHighlight,
   View
 } from 'react-native';
+import { connect } from 'react-redux';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
-class HomeView extends React.Component {
+class HomeView extends Component {
   static navigationOptions = ({ navigation }) => {
     const { state } = navigation;
 
@@ -40,6 +41,7 @@ class HomeView extends React.Component {
   }
 
   render() {
+    console.log('PROPS', this.props);
     return (
       <View style={{ alignItems: 'center' }}>
         <Text style={{ paddingTop: 50 }}>HOMEPAGE!</Text>
@@ -52,4 +54,6 @@ class HomeView extends React.Component {
   }
 }
 
-export default HomeView;
+const mapStateToProps = ({ user }) => ({ user });
+
+export default connect(mapStateToProps, {})(HomeView);

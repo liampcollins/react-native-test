@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Image, Text, View, KeyboardAvoidingView } from 'react-native';
 import {
   Button,
@@ -7,11 +7,13 @@ import {
   FormLabel,
   FormValidationMessage
 } from 'react-native-elements';
+import { connect } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { onSignIn } from '../../aws/auth';
 import utils from '../../aws/utils';
+import { userLoggedIn } from '../../actions';
 
-class SignInView extends React.Component {
+export class SignInView extends Component {
   static navigationOptions = ({ navigation }) => ({
     header: null
   });
@@ -39,7 +41,7 @@ class SignInView extends React.Component {
     const setValidate = () => {
       const state = {};
       state[`${name}ValidationError`] = null;
-      if (value == '') {
+      if (value === '') {
         state[`${name}ValidationError`] = 'Required';
         this.setState(state);
       } else {
@@ -59,6 +61,48 @@ class SignInView extends React.Component {
         setValidate();
       });
     }
+  }
+
+  getButtonState() {
+    if (
+      this.state.emailValidationError ||
+      this.state.passwordValidationError ||
+      this.state.email.length === 0 ||
+      this.state.password.length === 0 ||
+      this.state.loading
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  getErrorDisplay() {
+    if (this.state.error) {
+      return <Text>{this.state.error}</Text>;
+    }
+    return null;
+  }
+
+  signInUser() {
+    this.setState({ loading: true }, () => {
+      // This call to setTimeout is required to give the view time to render
+      const signIn = this.props.userLoggedIn;
+      setTimeout(() => {
+        onSignIn(this.state.email, this.state.password, err => {
+          if (err) {
+            this.setState(
+              { loading: false, error: err.message },
+              () => {
+                this.render();
+              }
+            );
+          } else {
+            signIn(this.state.email);
+            this.props.navigation.navigate('Home');
+          }
+        });
+      }, 50);
+    });
   }
 
   render() {
@@ -113,25 +157,7 @@ class SignInView extends React.Component {
             backgroundColor="#03A9F4"
             title="Sign In"
             loading={this.state.loading}
-            onPress={() => {
-              this.setState({ loading: true }, () => {
-                // This call to setTimeout is required to give the view time to render
-                setTimeout(() => {
-                  onSignIn(this.state.email, this.state.password, err => {
-                    if (err) {
-                      this.setState(
-                        { loading: false, error: err.message },
-                        () => {
-                          this.render();
-                        }
-                      );
-                    } else {
-                      this.props.navigation.navigate('Home');
-                    }
-                  });
-                }, 50);
-              });
-            }}
+            onPress={() => this.signInUser()}
           />
           <Button
             buttonStyle={{ marginTop: 10 }}
@@ -165,26 +191,8 @@ class SignInView extends React.Component {
       </KeyboardAwareScrollView>
     );
   }
-
-  getButtonState() {
-    if (
-      this.state.emailValidationError ||
-      this.state.passwordValidationError ||
-      this.state.email.length === 0 ||
-      this.state.password.length === 0 ||
-      this.state.loading
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  getErrorDisplay() {
-    if (this.state.error) {
-      return <Text>{this.state.error}</Text>;
-    }
-    return null;
-  }
 }
 
-export default SignInView;
+const mapStateToProps = ({ user }) => ({ user });
+// export default SignInView;
+export default connect(mapStateToProps, { userLoggedIn })(SignInView);
