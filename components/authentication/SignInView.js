@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Image, Text, View, KeyboardAvoidingView } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import {
   Button,
   Card,
@@ -30,7 +30,6 @@ export class SignInView extends Component {
     };
 
     if (props.signout) {
-      console.log('props.logout', props.signout);
       utils.removeEmailUserID(() => {
         console.log('user credentials cleared');
       });
@@ -83,6 +82,24 @@ export class SignInView extends Component {
     return null;
   }
 
+  goToRegister() {
+    const action = {
+      type: 'Navigation/RESET',
+      index: 0,
+      actions: [{ type: 'Navigate', routeName: 'Register' }]
+    };
+    this.props.navigation.dispatch(action);
+  }
+
+  goToForgotPassword() {
+    const action = {
+      type: 'Navigation/RESET',
+      index: 0,
+      actions: [{ type: 'Navigate', routeName: 'Reset' }]
+    };
+    this.props.navigation.dispatch(action);
+  }
+
   signInUser() {
     this.setState({ loading: true }, () => {
       // This call to setTimeout is required to give the view time to render
@@ -106,6 +123,7 @@ export class SignInView extends Component {
   }
 
   render() {
+    const { errorMsgStyle } = styles;
     return (
       <KeyboardAwareScrollView style={{ paddingVertical: 30 }}>
         <View style={{ alignItems: 'center' }}>
@@ -117,14 +135,7 @@ export class SignInView extends Component {
         <View style={{ alignItems: 'center' }}>
           {this.getErrorDisplay() && (
             <Text
-              style={{
-                paddingLeft: 10,
-                paddingRight: 10,
-                paddingTop: 30,
-                color: 'red',
-                fontSize: 16,
-                fontWeight: 'bold'
-              }}
+              style={errorMsgStyle}
             >
               {this.getErrorDisplay()}
             </Text>
@@ -164,28 +175,14 @@ export class SignInView extends Component {
             backgroundColor="transparent"
             textStyle={{ color: '#03A9F4' }}
             title="Register"
-            onPress={() => {
-              const action = {
-                type: 'Navigation/RESET',
-                index: 0,
-                actions: [{ type: 'Navigate', routeName: 'Register' }]
-              };
-              this.props.navigation.dispatch(action);
-            }}
+            onPress={() => this.goToRegister()}
           />
           <Button
             buttonStyle={{ marginTop: 0 }}
             backgroundColor="transparent"
             textStyle={{ color: '#03A9F4' }}
             title="Forgot Password"
-            onPress={() => {
-              const action = {
-                type: 'Navigation/RESET',
-                index: 0,
-                actions: [{ type: 'Navigate', routeName: 'Reset' }]
-              };
-              this.props.navigation.dispatch(action);
-            }}
+            onPress={() => this.goToForgotPassword()}
           />
         </Card>
       </KeyboardAwareScrollView>
@@ -193,6 +190,17 @@ export class SignInView extends Component {
   }
 }
 
+const styles = {
+  errorMsgStyle: {
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 30,
+    color: 'red',
+    fontSize: 16,
+    fontWeight: 'bold'
+  }
+};
+
 const mapStateToProps = ({ user }) => ({ user });
-// export default SignInView;
+
 export default connect(mapStateToProps, { userLoggedIn })(SignInView);

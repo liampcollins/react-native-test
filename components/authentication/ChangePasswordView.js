@@ -2,9 +2,7 @@ import React from 'react';
 import {
   Image,
   Text,
-  ScrollView,
   View,
-  KeyboardAvoidingView
 } from 'react-native';
 import {
   Button,
@@ -40,12 +38,12 @@ class ChangePasswordView extends React.Component {
   setFieldState(name, value) {
     const setValidate = () => {
       const state = {};
-      state[`${name} ValidationError`] = null;
+      state[`${name}ValidationError`] = null;
       if (value === '') {
-        state[`${name} ValidationError`] = 'Required';
+        state[`${name}ValidationError`] = 'Required';
         this.setState(state);
       } else {
-        state[`${name} ValidationError`] = '';
+        state[`${name}ValidationError`] = '';
         this.setState(state);
       }
     };
@@ -86,7 +84,72 @@ class ChangePasswordView extends React.Component {
     }
   }
 
+  getButtonState() {
+    if (
+      this.state.emailValidationError ||
+      this.state.codeValidationError ||
+      this.state.passwordValidationError ||
+      this.state.confirmPasswordValidationError ||
+      this.state.email.length === 0 ||
+      this.state.email.code === 0 ||
+      this.state.password.length === 0 ||
+      this.state.confirmPassword.length === 0 ||
+      this.state.loading
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  getErrorDisplay() {
+    if (this.state.error) {
+      return <Text>{this.state.error}</Text>;
+    }
+    return null;
+  }
+
+  goToSignIn() {
+    const action = {
+      type: 'Navigation/RESET',
+      index: 0,
+      actions: [{ type: 'Navigate', routeName: 'SignIn' }]
+    };
+    this.props.navigation.dispatch(action);
+  }
+
+  changePassword() {
+    this.setState({ loading: true });
+    onChangePassword(
+      this.state.email,
+      this.state.code,
+      this.state.password,
+      err => {
+        if (err) {
+          this.setState(
+            { loading: false, error: err.message },
+            () => {
+              this.render();
+            }
+          );
+        } else {
+          const action = {
+            type: 'Navigation/RESET',
+            index: 0,
+            actions: [
+              {
+                type: 'Navigate',
+                routeName: 'SignIn',
+                params: this.state.email
+              }
+            ]
+          };
+          this.props.navigation.dispatch(action);
+        }
+      }
+    );    
+  }
   render() {
+    const { errorMsgStyle } = styles;
     return (
       <KeyboardAwareScrollView style={{ paddingVertical: 30 }}>
         <View style={{ alignItems: 'center' }}>
@@ -98,14 +161,7 @@ class ChangePasswordView extends React.Component {
         {this.getErrorDisplay() && (
           <View style={{ alignItems: 'center' }}>
             <Text
-              style={{
-                paddingLeft: 10,
-                paddingRight: 10,
-                paddingTop: 30,
-                color: 'red',
-                fontSize: 16,
-                fontWeight: 'bold'
-              }}
+              style={errorMsgStyle}
             >
               {this.getErrorDisplay()}
             </Text>
@@ -157,80 +213,29 @@ class ChangePasswordView extends React.Component {
             backgroundColor="#03A9F4"
             title="Change Password"
             loading={this.state.loading}
-            onPress={() => {
-              this.setState({ loading: true });
-              onChangePassword(
-                this.state.email,
-                this.state.code,
-                this.state.password,
-                err => {
-                  if (err) {
-                    this.setState(
-                      { loading: false, error: err.message },
-                      () => {
-                        this.render();
-                      }
-                    );
-                  } else {
-                    const action = {
-                      type: 'Navigation/RESET',
-                      index: 0,
-                      actions: [
-                        {
-                          type: 'Navigate',
-                          routeName: 'SignIn',
-                          params: this.state.email
-                        }
-                      ]
-                    };
-                    this.props.navigation.dispatch(action);
-                  }
-                }
-              );
-            }}
+            onPress={() => this.changePassword()}
           />
           <Button
             buttonStyle={{ marginTop: 0 }}
             backgroundColor="transparent"
             textStyle={{ color: '#03A9F4' }}
             title="Sign In"
-            onPress={() => {
-              const action = {
-                type: 'Navigation/RESET',
-                index: 0,
-                actions: [{ type: 'Navigate', routeName: 'SignIn' }]
-              };
-              this.props.navigation.dispatch(action);
-            }}
+            onPress={() => this.goToSignIn()}
           />
         </Card>
       </KeyboardAwareScrollView>
     );
   }
-
-  getButtonState() {
-    if (
-      this.state.emailValidationError ||
-      this.state.codeValidationError ||
-      this.state.passwordValidationError ||
-      this.state.confirmPasswordValidationError ||
-      this.state.email.length === 0 ||
-      this.state.email.code === 0 ||
-      this.state.password.length === 0 ||
-      this.state.confirmPassword.length === 0 ||
-      this.state.loading
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  getErrorDisplay() {
-    if (this.state.error) {
-      return <Text>{this.state.error}</Text>;
-    }
-    return null;
-  }
 }
+const styles = {
+  errorMsgStyle: {
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 30,
+    color: 'red',
+    fontSize: 16,
+    fontWeight: 'bold'
+  }
+};
 
 export default ChangePasswordView;

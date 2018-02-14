@@ -2,9 +2,7 @@ import React from 'react';
 import {
   Image,
   Text,
-  ScrollView,
-  View,
-  KeyboardAvoidingView
+  View
 } from 'react-native';
 import {
   Button,
@@ -36,12 +34,12 @@ class VerifyView extends React.Component {
   setFieldState(name, value) {
     const setValidate = () => {
       const state = {};
-      state[`${name} ValidationError`] = null;
+      state[`${name}ValidationError`] = null;
       if (value === '') {
-        state[`${name} ValidationError`] = 'Required';
+        state[`${name}ValidationError`] = 'Required';
         this.setState(state);
       } else {
-        state[`${name} ValidationError`] = '';
+        state[`${name}ValidationError`] = '';
         this.setState(state);
       }
     };
@@ -59,7 +57,60 @@ class VerifyView extends React.Component {
     }
   }
 
+  getButtonState() {
+    if (
+      this.state.emailValidationError ||
+      this.state.codeValidationError ||
+      this.state.email.length === 0 ||
+      this.state.code.length === 0 ||
+      this.state.loading
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  getErrorDisplay() {
+    if (this.state.error) {
+      return <Text>{this.state.error}</Text>;
+    }
+    return null;
+  }
+
+  goToSignIn() {
+    const action = {
+      type: 'Navigation/RESET',
+      index: 0,
+      actions: [{ type: 'Navigate', routeName: 'SignIn' }]
+    };
+    this.props.navigation.dispatch(action);
+  }
+
+  verifyUser() {
+    onVerify(this.state.email, this.state.code, err => {
+      if (err) {
+        this.setState({ loading: false, error: err.message }, () => {
+          this.render();
+        });
+      } else {
+        const action = {
+          type: 'Navigation/RESET',
+          index: 0,
+          actions: [
+            {
+              type: 'Navigate',
+              routeName: 'SignIn',
+              params: this.state.email
+            }
+          ]
+        };
+        this.props.navigation.dispatch(action);
+      }
+    });
+  }
+
   render() {
+    const { confirmationMessageStyle, errorMsgStyle } = styles;
     return (
       <KeyboardAwareScrollView style={{ paddingVertical: 30 }}>
         <View style={{ alignItems: 'center' }}>
@@ -70,12 +121,7 @@ class VerifyView extends React.Component {
         </View>
         <View style={{ alignItems: 'center' }}>
           <Text
-            style={{
-              paddingLeft: 10,
-              paddingRight: 10,
-              paddingTop: 30,
-              fontSize: 16
-            }}
+            style={confirmationMessageStyle}
           >
             An email has been sent to you containing your confirmation code.
           </Text>
@@ -83,14 +129,7 @@ class VerifyView extends React.Component {
         <View style={{ alignItems: 'center' }}>
           {this.getErrorDisplay() && (
             <Text
-              style={{
-                paddingLeft: 10,
-                paddingRight: 10,
-                paddingTop: 30,
-                color: 'red',
-                fontSize: 16,
-                fontWeight: 'bold'
-              }}
+              style={errorMsgStyle}
             >
               {this.getErrorDisplay()}
             </Text>
@@ -123,67 +162,35 @@ class VerifyView extends React.Component {
             backgroundColor="#03A9F4"
             title="Verify"
             loading={this.state.loading}
-            onPress={() => {
-              onVerify(this.state.email, this.state.code, err => {
-                if (err) {
-                  this.setState({ loading: false, error: err.message }, () => {
-                    this.render();
-                  });
-                } else {
-                  const action = {
-                    type: 'Navigation/RESET',
-                    index: 0,
-                    actions: [
-                      {
-                        type: 'Navigate',
-                        routeName: 'SignIn',
-                        params: this.state.email
-                      }
-                    ]
-                  };
-                  this.props.navigation.dispatch(action);
-                }
-              });
-            }}
+            onPress={() => this.verifyUser()}
           />
           <Button
             buttonStyle={{ marginTop: 25 }}
             backgroundColor="transparent"
             textStyle={{ color: '#03A9F4' }}
             title="Sign In"
-            onPress={() => {
-              const action = {
-                type: 'Navigation/RESET',
-                index: 0,
-                actions: [{ type: 'Navigate', routeName: 'SignIn' }]
-              };
-              this.props.navigation.dispatch(action);
-            }}
+            onPress={() => this.goToSignIn()}
           />
         </Card>
       </KeyboardAwareScrollView>
     );
   }
-
-  getButtonState() {
-    if (
-      this.state.emailValidationError ||
-      this.state.codeValidationError ||
-      this.state.email.length === 0 ||
-      this.state.code.length === 0 ||
-      this.state.loading
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  getErrorDisplay() {
-    if (this.state.error) {
-      return <Text>{this.state.error}</Text>;
-    }
-    return null;
-  }
 }
 
+const styles = {
+  confirmationMessageStyle: {
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 30,
+    fontSize: 16
+  },
+  errorMsgStyle: {
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 30,
+    color: 'red',
+    fontSize: 16,
+    fontWeight: 'bold'
+  }
+};
 export default VerifyView;
